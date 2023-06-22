@@ -2,37 +2,42 @@ package com.example.barcodescanner
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.device.ScanManager
+import android.device.ScanManager.BARCODE_LENGTH_TAG
+import android.device.ScanManager.DECODE_DATA_TAG
 import android.device.scanner.configuration.PropertyID
 import android.device.scanner.configuration.Triggering
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import com.example.barcodescanner.ScanManagerHandler.Companion.MSG_SHOW_SCAN_RESULT
+import com.example.barcodescanner.listeners.ScanReceiverListener
 import timber.log.Timber
 import java.lang.ref.WeakReference
 
-class ScanManagerUtils {
-
+class ScanManagerHandler(
+   private val context: Context,
+){
+    val scanReciever by lazy { context as ScanReceiverListener }
     private val scanManger = ScanManager()
     private var broadcastIsRegistered = false
+    private var register = false
 
     companion object {
-        val DECODE_TRIGGER_MODE_HOST = Triggering.HOST
-        val DECODE_TRIGGER_MODE_CONTINUOUS = Triggering.CONTINUOUS
         val DECODE_TRIGGER_MODE_PAUSE = Triggering.PULSE
-
         const val DECODE_OUTPUT_MODE_INTENT = 0
-        const val DECODE_OUTPUT_MODE_FOCUS = 1
         const val MSG_SHOW_SCAN_RESULT = 1
-        const val KEY_CODE_SCANNER_LEFT = 520
-        const val KEY_CODE_SCANNER_RIGHT = 521
         const val ACTION_CAPTURE_IMAGE = "scanner_capture_image_result"
+
     }
 
     init {
         openScanner()
     }
+
+    fun setRegister(register: Boolean) {this.register = register}
 
     fun getScanOutputMode() : Int = scanManger.outputMode
 
@@ -60,28 +65,6 @@ class ScanManagerUtils {
         }
     }
 
-    private fun updateLockTriggerState(state : Boolean) {
-        val currentState = getLockTriggerState()
-        if (state != currentState){
-            if (state){
-                scanManger.lockTrigger()
-            }
-            else {
-                scanManger.unlockTrigger()
-            }
-        }
-    }
-
-    fun startDecode() : Boolean {
-        return if (getLockTriggerState()){
-            false
-        }
-        else {
-            scanManger.startDecode()
-            true
-        }
-    }
-
     fun stopDecode() {
         scanManger.stopDecode()
     }
@@ -105,7 +88,7 @@ class ScanManagerUtils {
         return state
     }
 
-    fun registerDataReceiver(register: Boolean, broadcastReceiver: BroadcastReceiver, context: Context?) {
+    fun registerDataReceiver() {
         if (register) {
             val filter = IntentFilter()
             val idBuf = arrayOf(
@@ -119,14 +102,14 @@ class ScanManagerUtils {
                 filter.addAction(ScanManager.ACTION_DECODE)
             }
             filter.addAction(ACTION_CAPTURE_IMAGE)
-            context?.registerReceiver(broadcastReceiver, filter)
+            context.registerReceiver(broadcastReceiver, filter)
         }
         else {
             stopDecode()
             try {
                 //try catch is added because if the broadcastReceiver is not registered the app crash.
                 if(broadcastIsRegistered){
-                    context?.unregisterReceiver(broadcastReceiver)
+                    context.unregisterReceiver(broadcastReceiver)
                 }
             }catch (e: Exception){
                 Timber.e(e,"Unregister receiver Error")
@@ -135,15 +118,31 @@ class ScanManagerUtils {
         broadcastIsRegistered = register
     }
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let { intentSafe ->
+                val barcode = intentSafe.getByteArrayExtra(DECODE_DATA_TAG)
+                val barcodeLength = intentSafe.getIntExtra(BARCODE_LENGTH_TAG, 0)
+                barcode?.let { barcodeSafe ->
+                    val scanResult = String(barcodeSafe, 0, barcodeLength)
+                    val handler = ScanHandler.getScanHandler(context as ScanReceiverListener)
+                    val msg = handler.obtainMessage(MSG_SHOW_SCAN_RESULT)
+                    msg.obj = scanResult
+                    scanReciever.onScanResult(scanResult)
+                }
+            }
+        }
+    }
+
 }
 
 
 
 class ScanHandler: Handler(Looper.getMainLooper()) {
-    private lateinit var scanReceiver: WeakReference<ScanReceiver>
+    private lateinit var scanReceiver: WeakReference<ScanReceiverListener>
 
     companion object {
-        fun getScanHandler(scanReceiver: ScanReceiver): ScanHandler {
+        fun getScanHandler(scanReceiver: ScanReceiverListener): ScanHandler {
             val handler = ScanHandler()
             handler.scanReceiver = WeakReference(scanReceiver)
             return handler
@@ -154,16 +153,10 @@ class ScanHandler: Handler(Looper.getMainLooper()) {
         super.handleMessage(msg)
         scanReceiver.get()?.onScanHandled()
         when(msg.what) {
-            ScanManagerUtils.MSG_SHOW_SCAN_RESULT -> {
+            MSG_SHOW_SCAN_RESULT -> {
                 val scanResult = msg.obj as String
                 scanReceiver.get()?.onScanResult(scanResult)
             }
         }
     }
-
-}
-
-interface ScanReceiver {
-    fun onScanHandled()
-    fun onScanResult(scanResult: String)
 }
