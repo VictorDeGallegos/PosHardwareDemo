@@ -1,4 +1,4 @@
-package com.example.barcodescanner
+package com.example.poshardwaredemo
 
 import org.junit.Test
 

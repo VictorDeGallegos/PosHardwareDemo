@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.barcodescanner'
+    namespace 'com.example.poshardwaredemo'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.barcodescanner"
+        applicationId "com.example.poshardwaredemo"
         minSdk 25
         targetSdk 33
         versionCode 1

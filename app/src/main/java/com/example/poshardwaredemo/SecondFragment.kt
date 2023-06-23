@@ -1,4 +1,4 @@
-package com.example.barcodescanner
+package com.example.poshardwaredemo
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
-import com.example.barcodescanner.databinding.FragmentSecondBinding
+import com.example.poshardwaredemo.databinding.FragmentSecondBinding
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.

@@ -1,4 +1,4 @@
-package com.example.barcodescanner
+package com.example.poshardwaredemo
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -12,8 +12,8 @@ import android.device.scanner.configuration.Triggering
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import com.example.barcodescanner.ScanManagerHandler.Companion.MSG_SHOW_SCAN_RESULT
-import com.example.barcodescanner.listeners.ScanReceiverListener
+import com.example.poshardwaredemo.ScanManagerHandler.Companion.MSG_SHOW_SCAN_RESULT
+import com.example.poshardwaredemo.listeners.ScanReceiverListener
 import timber.log.Timber
 import java.lang.ref.WeakReference
 

@@ -1,4 +1,4 @@
-package com.example.barcodescanner.listeners
+package com.example.poshardwaredemo.listeners
 
 interface ScanReceiverListener {
     fun onScanHandled()

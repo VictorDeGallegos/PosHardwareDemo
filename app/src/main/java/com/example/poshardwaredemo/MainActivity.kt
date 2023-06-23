@@ -1,9 +1,9 @@
-package com.example.barcodescanner
+package com.example.poshardwaredemo
 
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.barcodescanner.listeners.ScanReceiverListener
+import com.example.poshardwaredemo.listeners.ScanReceiverListener
 
 
 class MainActivity : AppCompatActivity(), ScanReceiverListener {
